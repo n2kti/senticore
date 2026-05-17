@@ -112,10 +112,11 @@ export default function AICounseling({
       }]);
     } catch (error) {
       setMessages(prev => prev.filter(m => m.id !== 'typing'));
+      const message = error instanceof Error ? error.message : 'LLM_REQUEST_FAILED';
       setMessages(prev => [...prev, {
         id: Date.now().toString(),
         role: 'assistant',
-        content: 'AI 호출에 실패했습니다. Google 또는 Groq API 키와 네트워크 연결을 확인해야 합니다.',
+        content: `AI 호출에 실패했습니다.\n\n${message}`,
       }]);
     } finally {
       setLoading(false);

@@ -45,6 +45,16 @@ Browser
 - `src/lib/llmClient.ts`: 프론트의 `/api/llm` 호출 클라이언트
 - `src/data/mockData.ts`: 더미 고객 데이터 5건
 
+## 로컬 테스트
+
+`npm run dev`는 Vite 화면만 띄우므로 `/api/llm` Worker가 실행되지 않습니다. AI 호출까지 로컬에서 확인하려면 아래 명령을 사용합니다.
+
+```bash
+npm run dev:worker
+```
+
+로컬에서도 `LLM_API_KEY`가 필요합니다. Cloudflare 배포 환경에서는 대시보드의 Secret으로 설정합니다.
+
 ## 필요 없는 것
 
 - NAS 파일 업로드

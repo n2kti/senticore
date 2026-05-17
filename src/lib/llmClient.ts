@@ -18,7 +18,8 @@ export async function requestLlmJson<T = unknown>(
 
   const payload = await response.json().catch(() => null);
   if (!response.ok || !payload?.ok) {
-    throw new Error(payload?.error || 'LLM_REQUEST_FAILED');
+    const error = payload?.error || 'LLM_REQUEST_FAILED';
+    throw new Error(error);
   }
 
   return {

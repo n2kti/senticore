@@ -98,7 +98,8 @@ async function callGemini({
   });
 
   if (!response.ok) {
-    throw new Error(`GEMINI_${response.status}`);
+    const errorText = await response.text().catch(() => '');
+    throw new Error(`GEMINI_${response.status}${errorText ? `_${errorText.slice(0, 180)}` : ''}`);
   }
 
   const payload = await response.json() as {
