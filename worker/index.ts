@@ -38,6 +38,7 @@ async function handleLlm(request: Request, env: Env) {
     const body = await request.json() as {
       prompt?: string;
       systemMessages?: string[];
+      responseType?: 'draft' | 'questions' | 'sentiment';
     };
 
     if (!body.prompt || typeof body.prompt !== 'string') {
@@ -51,7 +52,13 @@ async function handleLlm(request: Request, env: Env) {
 
     const model = env.LLM_MODEL || 'gemini-2.5-flash';
     const systemMessages = Array.isArray(body.systemMessages) ? body.systemMessages : [];
-    const result = await callGeminiWithFallback({ apiKeys, model, prompt: body.prompt, systemMessages });
+    const result = await callGeminiWithFallback({
+      apiKeys,
+      model,
+      prompt: body.prompt,
+      systemMessages,
+      responseType: body.responseType,
+    });
 
     return json({
       ok: true,
@@ -75,17 +82,19 @@ async function callGeminiWithFallback({
   model,
   prompt,
   systemMessages,
+  responseType,
 }: {
   apiKeys: string[];
   model: string;
   prompt: string;
   systemMessages: string[];
+  responseType?: 'draft' | 'questions' | 'sentiment';
 }) {
   let lastError: Error | null = null;
 
   for (let index = 0; index < apiKeys.length; index += 1) {
     try {
-      const data = await callGemini({ apiKey: apiKeys[index], model, prompt, systemMessages });
+      const data = await callGemini({ apiKey: apiKeys[index], model, prompt, systemMessages, responseType });
       return { data, keyIndex: index + 1 };
     } catch (error) {
       lastError = error instanceof Error ? error : new Error('LLM_REQUEST_FAILED');
@@ -101,11 +110,13 @@ async function callGemini({
   model,
   prompt,
   systemMessages,
+  responseType,
 }: {
   apiKey: string;
   model: string;
   prompt: string;
   systemMessages: string[];
+  responseType?: 'draft' | 'questions' | 'sentiment';
 }) {
   const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${encodeURIComponent(apiKey)}`, {
     method: 'POST',
@@ -121,6 +132,7 @@ async function callGemini({
         temperature: 0.1,
         maxOutputTokens: 900,
         responseMimeType: 'application/json',
+        responseSchema: responseSchemaFor(responseType),
       },
     }),
   });
@@ -138,7 +150,74 @@ async function callGemini({
 }
 
 function parseJsonText(text: string) {
-  return JSON.parse(text.replace(/```json|```/g, '').trim());
+  const cleaned = text.replace(/```json|```/g, '').trim();
+  try {
+    return JSON.parse(cleaned);
+  } catch (error) {
+    const start = cleaned.indexOf('{');
+    const end = cleaned.lastIndexOf('}');
+    if (start >= 0 && end > start) {
+      try {
+        return JSON.parse(cleaned.slice(start, end + 1));
+      } catch {
+        // Fall through to a compact operational error.
+      }
+    }
+    throw new Error(`LLM_JSON_PARSE_${error instanceof Error ? error.message : 'INVALID_JSON'}`);
+  }
+}
+
+function responseSchemaFor(responseType?: 'draft' | 'questions' | 'sentiment') {
+  if (responseType === 'questions') {
+    return {
+      type: 'OBJECT',
+      properties: {
+        questions: {
+          type: 'ARRAY',
+          items: { type: 'STRING' },
+        },
+      },
+      required: ['questions'],
+    };
+  }
+
+  if (responseType === 'sentiment') {
+    return {
+      type: 'OBJECT',
+      properties: {
+        score: { type: 'NUMBER' },
+        cooperation: { type: 'NUMBER' },
+        stability: { type: 'NUMBER' },
+        keywords: {
+          type: 'ARRAY',
+          items: { type: 'STRING' },
+        },
+        summary: { type: 'STRING' },
+        strategy: { type: 'STRING' },
+      },
+      required: ['score', 'cooperation', 'stability', 'keywords', 'summary', 'strategy'],
+    };
+  }
+
+  return {
+    type: 'OBJECT',
+    properties: {
+      intent: { type: 'STRING' },
+      draft: { type: 'STRING' },
+      canSendImmediately: { type: 'BOOLEAN' },
+      notice: { type: 'STRING' },
+      nextActions: {
+        type: 'ARRAY',
+        items: { type: 'STRING' },
+      },
+      appliedManuals: {
+        type: 'ARRAY',
+        items: { type: 'STRING' },
+      },
+      tonePolicy: { type: 'STRING' },
+    },
+    required: ['intent', 'draft', 'canSendImmediately', 'notice', 'nextActions', 'appliedManuals', 'tonePolicy'],
+  };
 }
 
 function isQuotaOrRateLimitError(error: Error) {

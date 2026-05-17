@@ -7,13 +7,14 @@ export type LlmClientResult<T = unknown> = {
 
 export async function requestLlmJson<T = unknown>(
   prompt: string,
-  systemMessages: string[]
+  systemMessages: string[],
+  responseType?: 'draft' | 'questions' | 'sentiment'
 ): Promise<LlmClientResult<T>> {
   const startedAt = performance.now();
   const response = await fetch('/api/llm', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ prompt, systemMessages }),
+    body: JSON.stringify({ prompt, systemMessages, responseType }),
   });
 
   const payload = await response.json().catch(() => null);
@@ -39,6 +40,9 @@ function toUserFacingLlmError(error: string) {
   }
   if (error.includes('GEMINI_400')) {
     return 'AI 요청 형식에 문제가 있습니다. 입력 내용 또는 모델 설정을 확인해야 합니다.';
+  }
+  if (error.includes('LLM_JSON_PARSE')) {
+    return 'AI 응답 형식이 올바르지 않습니다. 다시 요청해 주세요.';
   }
   if (error.includes('GEMINI_401') || error.includes('GEMINI_403')) {
     return 'AI API 키 권한 또는 결제 설정을 확인해야 합니다.';

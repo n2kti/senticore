@@ -74,7 +74,7 @@ export async function classifyIntentAndDraft(
       "첫 문단은 현재 상태 안내, 두 번째 문단은 고객이 해야 할 다음 행동입니다.",
       "화면 행동 전략과 화면 응대 전략을 우선 반영하세요.",
       "법적 조치, 감면, 승인 여부는 확정하지 말고 현재 확인 가능한 범위와 필요한 다음 행동만 안내하세요.",
-    ]);
+    ], 'draft');
     return withDraftDefaults(generated.data, guidance, strategy, {
       provider: generated.provider,
       elapsedMs: generated.elapsedMs,
@@ -150,7 +150,7 @@ export async function analyzeSentiment(content: string) {
       "JSON만 출력하세요.",
       "상담 메모의 감성 상태를 수치화하세요.",
       "출력 키는 score, cooperation, stability, keywords, summary, strategy만 사용하세요.",
-    ]);
+    ], 'sentiment');
     return generated.data;
   } catch (error) {
     console.error("Sentiment Analysis Error:", error);
@@ -188,7 +188,7 @@ export async function generateSuggestedQuestions(
       "상담원이 누를 예상 질문 버튼 4개만 생성하세요.",
       "고객에게 보낼 멘트가 아니라 상담원이 선택할 짧은 질문/업무 메뉴명입니다.",
       "출력 키는 questions만 사용하세요.",
-    ]);
+    ], 'questions');
     const questions = generated?.data?.questions;
     if (Array.isArray(questions)) return questions.slice(0, 4);
   } catch (error) {
