@@ -46,5 +46,9 @@ function toUserFacingLlmError(error: string) {
   if (error.includes('GEMINI_5')) {
     return 'AI 제공자 서버가 일시적으로 불안정합니다. 잠시 후 다시 시도하세요.';
   }
-  return 'AI 호출에 실패했습니다. 네트워크 또는 Cloudflare Worker 로그를 확인해야 합니다.';
+  return `AI 호출에 실패했습니다. Cloudflare Worker 로그를 확인해야 합니다. (${compactError(error)})`;
+}
+
+function compactError(error: string) {
+  return error.replace(/\s+/g, ' ').slice(0, 160);
 }
