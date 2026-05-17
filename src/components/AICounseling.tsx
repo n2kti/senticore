@@ -442,7 +442,6 @@ function formatScriptParagraphs(draft: string) {
 }
 
 function formatProvider(provider?: string, model?: string) {
-  if (provider === 'ollama') return model ? `Ollama ${model}` : 'Ollama';
   if (provider === 'gemini' || provider === 'google') return model ? `Gemini ${model}` : 'Gemini';
   return 'Fallback';
 }
