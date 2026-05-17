@@ -5,6 +5,7 @@ type AssetFetcher = {
 type Env = {
   ASSETS: AssetFetcher;
   LLM_API_KEY?: string;
+  LLM_FALLBACK_API_KEY?: string;
   LLM_MODEL?: string;
 };
 
@@ -43,20 +44,21 @@ async function handleLlm(request: Request, env: Env) {
       return json({ ok: false, error: 'PROMPT_REQUIRED' }, 400);
     }
 
-    const apiKey = env.LLM_API_KEY;
-    if (!apiKey) {
+    const apiKeys = [env.LLM_API_KEY, env.LLM_FALLBACK_API_KEY].filter((key): key is string => Boolean(key));
+    if (!apiKeys.length) {
       return json({ ok: false, error: 'LLM_API_KEY_REQUIRED' }, 500);
     }
 
     const model = env.LLM_MODEL || 'gemini-2.5-flash';
     const systemMessages = Array.isArray(body.systemMessages) ? body.systemMessages : [];
-    const data = await callGemini({ apiKey, model, prompt: body.prompt, systemMessages });
+    const result = await callGeminiWithFallback({ apiKeys, model, prompt: body.prompt, systemMessages });
 
     return json({
       ok: true,
-      data,
+      data: result.data,
       provider: 'gemini',
       model,
+      keyIndex: result.keyIndex,
       elapsedMs: Date.now() - startedAt,
     });
   } catch (error) {
@@ -66,6 +68,32 @@ async function handleLlm(request: Request, env: Env) {
       elapsedMs: Date.now() - startedAt,
     }, 502);
   }
+}
+
+async function callGeminiWithFallback({
+  apiKeys,
+  model,
+  prompt,
+  systemMessages,
+}: {
+  apiKeys: string[];
+  model: string;
+  prompt: string;
+  systemMessages: string[];
+}) {
+  let lastError: Error | null = null;
+
+  for (let index = 0; index < apiKeys.length; index += 1) {
+    try {
+      const data = await callGemini({ apiKey: apiKeys[index], model, prompt, systemMessages });
+      return { data, keyIndex: index + 1 };
+    } catch (error) {
+      lastError = error instanceof Error ? error : new Error('LLM_REQUEST_FAILED');
+      if (!isQuotaOrRateLimitError(lastError)) throw lastError;
+    }
+  }
+
+  throw lastError || new Error('LLM_REQUEST_FAILED');
 }
 
 async function callGemini({
@@ -111,6 +139,10 @@ async function callGemini({
 
 function parseJsonText(text: string) {
   return JSON.parse(text.replace(/```json|```/g, '').trim());
+}
+
+function isQuotaOrRateLimitError(error: Error) {
+  return error.message.includes('GEMINI_429');
 }
 
 function json(payload: unknown, status = 200) {

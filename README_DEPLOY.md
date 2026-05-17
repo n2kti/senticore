@@ -23,9 +23,10 @@ Cloudflare의 Variables/Secrets에 아래 값을 넣습니다.
 | 변수 | 구분 | 값 |
 | --- | --- | --- |
 | `LLM_API_KEY` | Secret | Gemini API Key |
+| `LLM_FALLBACK_API_KEY` | Secret | 예비 Gemini API Key |
 | `LLM_MODEL` | Variable | `gemini-2.5-flash` |
 
-`LLM_API_KEY`는 절대 프론트 코드나 `.env`에 넣지 않습니다.
+`LLM_API_KEY`와 `LLM_FALLBACK_API_KEY`는 절대 프론트 코드나 `.env`에 넣지 않습니다. 기본 키가 `429` 한도 초과를 반환하면 Worker가 예비 키로 한 번 더 시도합니다.
 
 ## 호출 구조
 
@@ -58,6 +59,7 @@ npm run dev:worker
 
 ```txt
 LLM_API_KEY=Gemini API Key
+LLM_FALLBACK_API_KEY=Fallback Gemini API Key
 LLM_MODEL=gemini-2.5-flash
 ```
 
