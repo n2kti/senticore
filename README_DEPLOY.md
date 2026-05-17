@@ -1,62 +1,54 @@
-# SentiCore Cloudflare Pages 배포
+# SentiCore Cloudflare 배포
 
-이 프로젝트는 정적 React/Vite 웹 앱입니다. 화면 데이터는 `src/data/mockData.ts`의 더미데이터 5건만 사용하며, DB/로그인/저장 기능은 없습니다.
+Cloudflare 대시보드에서 Pages 선택지가 보이지 않고 `npx wrangler versions upload` 같은 항목이 보이면, 현재 UI는 Workers 배포 흐름입니다. 이 프로젝트는 그 흐름에 맞게 **Workers + Static Assets** 방식으로 배포합니다.
 
-LLM 호출만 Cloudflare Pages Functions의 `/api/llm`을 통해 처리합니다. API Key는 프론트 코드나 번들에 포함하지 않고 Cloudflare 환경변수로만 설정합니다.
+앱 자체는 정적 React/Vite 화면이고, LLM 호출만 Worker의 `/api/llm`에서 처리합니다. DB, 로그인, 저장 기능, NAS Docker, Cloudflare Tunnel은 사용하지 않습니다.
 
-## 배포 설정값
+## Cloudflare 설정값
 
-Cloudflare Pages 프로젝트 생성 시 아래 값으로 설정합니다.
+GitHub repo: `n2kti/senticore`
 
 | 항목 | 값 |
 | --- | --- |
-| Framework preset | `Vite` 또는 `React/Vite` |
 | Build command | `npm run build` |
-| Output directory | `dist` |
-| Functions directory | `functions` |
-| Node.js version | `20` 이상 권장 |
+| Deploy command | `npx wrangler deploy` |
+| Non-production branch deploy command | `npx wrangler versions upload` |
+| Root path | `/` |
+| Wrangler config | `wrangler.jsonc` |
 
 ## 환경변수
 
-Cloudflare Pages의 `Settings > Environment variables`에서 설정합니다.
+Cloudflare의 Variables/Secrets에 아래 값을 넣습니다.
 
-| 변수 | 필수 | 설명 |
+| 변수 | 구분 | 값 |
 | --- | --- | --- |
-| `LLM_API_KEY` | 예 | Gemini API Key |
-| `LLM_MODEL` | 예 | Gemini 모델명 |
+| `LLM_API_KEY` | Secret | Gemini API Key |
+| `LLM_MODEL` | Variable | `gemini-2.5-flash` |
 
-예시:
-
-```txt
-LLM_API_KEY=실제 Gemini API Key
-LLM_MODEL=gemini-2.5-flash
-```
+`LLM_API_KEY`는 절대 프론트 코드나 `.env`에 넣지 않습니다.
 
 ## 호출 구조
 
 ```txt
 Browser
   -> /api/llm
-  -> Cloudflare Pages Functions
+  -> Cloudflare Worker
   -> Gemini API
 ```
 
-프론트 코드는 `/api/llm`만 호출합니다. Provider API Key는 `functions/api/llm.ts`에서 Cloudflare 환경변수로만 읽습니다.
+정적 파일은 `dist`를 Worker Static Assets로 제공합니다. `/api/llm`만 Worker 코드가 처리하고, 나머지 요청은 정적 앱으로 전달합니다.
 
-## 로컬 파일 주의
+## 관련 파일
 
-- 실제 키는 `.env`, `.env.local`, `src`에 넣지 않습니다.
-- `.env.example`만 샘플로 유지합니다.
-- `.gitignore`는 `.env*`를 제외하고 `.env.example`만 허용합니다.
+- `wrangler.jsonc`: Cloudflare Workers + Static Assets 배포 설정
+- `worker/index.ts`: `/api/llm` 서버리스 API 및 정적 파일 서빙
+- `src/lib/llmClient.ts`: 프론트의 `/api/llm` 호출 클라이언트
+- `src/data/mockData.ts`: 더미 고객 데이터 5건
 
-## 필요 없는 파일
+## 필요 없는 것
 
-현재 구조에서는 아래 파일이 필요 없습니다.
-
-- `Dockerfile`
-- `docker-compose.yml`
-- NAS 배포 스크립트
-- Cloudflare Tunnel 설정 파일
-- 별도 Express/Node API 서버 파일
-
-현재 저장소에는 위 파일을 추가하지 않습니다.
+- NAS 파일 업로드
+- Dockerfile
+- docker-compose.yml
+- Cloudflare Tunnel
+- 별도 Express/Node 서버
