@@ -116,7 +116,7 @@ export default function AICounseling({
       setMessages(prev => [...prev, {
         id: Date.now().toString(),
         role: 'assistant',
-        content: `AI 호출에 실패했습니다.\n\n${message}`,
+        content: message,
       }]);
     } finally {
       setLoading(false);
