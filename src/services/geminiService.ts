@@ -87,7 +87,7 @@ export async function classifyIntentAndDraft(
 }
 
 function sanitizeCustomerDraft(draft: string) {
-  return String(draft || "")
+  return stripDraftJsonNoise(String(draft || ""))
     .replace(/\n?\s*상담\s?기준\s*:\s*.*$/gim, "")
     .replace(/\n?\s*응대\s?전략\s*:\s*.*$/gim, "")
     .replace(/\n?\s*행동\s?전략\s*:\s*.*$/gim, "")
@@ -100,6 +100,32 @@ function sanitizeCustomerDraft(draft: string) {
     .replace(/담당자에게\s*/g, "")
     .replace(/\n{3,}/g, "\n\n")
     .trim();
+}
+
+function stripDraftJsonNoise(draft: string) {
+  const parsed = parseEmbeddedDraft(draft);
+  if (parsed) return parsed;
+
+  return draft
+    .replace(/^\s*\{?\s*"intent"\s*:\s*"[^"]*",?\s*/i, "")
+    .replace(/^\s*"draft"\s*:\s*"?/i, "")
+    .replace(/",?\s*"(canSendImmediately|notice|nextActions|appliedManuals|tonePolicy)"[\s\S]*$/i, "")
+    .replace(/^\s*\{/, "")
+    .replace(/\}\s*$/, "")
+    .trim();
+}
+
+function parseEmbeddedDraft(value: string) {
+  const trimmed = value.trim();
+  if (!trimmed.startsWith('{')) return null;
+
+  try {
+    const parsed = JSON.parse(trimmed);
+    return typeof parsed?.draft === 'string' ? parsed.draft : null;
+  } catch {
+    const match = trimmed.match(/"draft"\s*:\s*"([\s\S]*?)(?:"\s*,\s*"(canSendImmediately|notice|nextActions|appliedManuals|tonePolicy)"|"\s*\})/);
+    return match?.[1]?.replace(/\\"/g, '"').replace(/\\n/g, '\n').trim() || null;
+  }
 }
 
 function withDraftDefaults(
