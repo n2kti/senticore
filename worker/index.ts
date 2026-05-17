@@ -146,14 +146,24 @@ async function callGemini({
     candidates?: Array<{ content?: { parts?: Array<{ text?: string }> } }>;
   };
   const text = payload.candidates?.[0]?.content?.parts?.map((part) => part.text || '').join('') || '';
-  return parseJsonText(text);
+  return parseJsonText(text, responseType);
 }
 
-function parseJsonText(text: string) {
+function parseJsonText(text: string, responseType?: 'draft' | 'questions' | 'sentiment') {
   const cleaned = text.replace(/```json|```/g, '').trim();
   try {
     return JSON.parse(cleaned);
   } catch (error) {
+    const escaped = escapeRawNewlinesInsideStrings(cleaned);
+    try {
+      return JSON.parse(escaped);
+    } catch {
+      // Continue with type-specific recovery below.
+    }
+
+    const recovered = recoverTypedResponse(cleaned, responseType);
+    if (recovered) return recovered;
+
     const start = cleaned.indexOf('{');
     const end = cleaned.lastIndexOf('}');
     if (start >= 0 && end > start) {
@@ -165,6 +175,85 @@ function parseJsonText(text: string) {
     }
     throw new Error(`LLM_JSON_PARSE_${error instanceof Error ? error.message : 'INVALID_JSON'}`);
   }
+}
+
+function escapeRawNewlinesInsideStrings(text: string) {
+  let output = '';
+  let inString = false;
+  let escaped = false;
+
+  for (const char of text) {
+    if (escaped) {
+      output += char;
+      escaped = false;
+      continue;
+    }
+
+    if (char === '\\') {
+      output += char;
+      escaped = true;
+      continue;
+    }
+
+    if (char === '"') {
+      inString = !inString;
+      output += char;
+      continue;
+    }
+
+    if (inString && char === '\n') {
+      output += '\\n';
+      continue;
+    }
+
+    if (inString && char === '\r') {
+      continue;
+    }
+
+    output += char;
+  }
+
+  return output;
+}
+
+function recoverTypedResponse(text: string, responseType?: 'draft' | 'questions' | 'sentiment') {
+  if (responseType === 'draft') {
+    const draft = extractStringField(text, 'draft') || text;
+    return {
+      intent: extractStringField(text, 'intent') || '상담 안내',
+      draft: stripJsonNoise(draft),
+      canSendImmediately: false,
+      notice: extractStringField(text, 'notice') || 'AI 응답 형식 일부가 보정되었습니다. 문구 확인 후 사용하세요.',
+      nextActions: extractStringArrayField(text, 'nextActions').slice(0, 2),
+      appliedManuals: extractStringArrayField(text, 'appliedManuals'),
+      tonePolicy: extractStringField(text, 'tonePolicy') || '상담 보조',
+    };
+  }
+
+  if (responseType === 'questions') {
+    const questions = extractStringArrayField(text, 'questions');
+    if (questions.length) return { questions: questions.slice(0, 4) };
+  }
+
+  return null;
+}
+
+function extractStringField(text: string, field: string) {
+  const match = text.match(new RegExp(`"${field}"\\s*:\\s*"([\\s\\S]*?)(?:"\\s*,\\s*"\\w+"|"}\\s*$|"$)`));
+  return match?.[1]?.replace(/\\"/g, '"').replace(/\\n/g, '\n').trim();
+}
+
+function extractStringArrayField(text: string, field: string) {
+  const match = text.match(new RegExp(`"${field}"\\s*:\\s*\\[([\\s\\S]*?)\\]`));
+  if (!match) return [];
+  return Array.from(match[1].matchAll(/"([^"]+)"/g)).map((item) => item[1].trim()).filter(Boolean);
+}
+
+function stripJsonNoise(text: string) {
+  return text
+    .replace(/^\{?\s*"draft"\s*:\s*"?/, '')
+    .replace(/",?\s*"(canSendImmediately|notice|nextActions|appliedManuals|tonePolicy)"[\s\S]*$/m, '')
+    .trim();
 }
 
 function responseSchemaFor(responseType?: 'draft' | 'questions' | 'sentiment') {
