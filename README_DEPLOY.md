@@ -54,6 +54,12 @@ npm run dev:worker
 ```
 
 로컬에서도 `LLM_API_KEY`가 필요합니다. Cloudflare 배포 환경에서는 대시보드의 Secret으로 설정합니다.
+로컬에서는 `.dev.vars` 파일에 아래처럼 넣습니다.
+
+```txt
+LLM_API_KEY=Gemini API Key
+LLM_MODEL=gemini-2.5-flash
+```
 
 ## 필요 없는 것
 
