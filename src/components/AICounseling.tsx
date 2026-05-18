@@ -247,17 +247,12 @@ export default function AICounseling({
                         className="w-full flex flex-col gap-2"
                       >
                         <div className="rounded-xl border border-brand-100 bg-white px-4 py-3 shadow-sm">
-                          <div className="mb-3 flex items-center justify-between gap-3">
+                          <div className="mb-3 flex items-start justify-between gap-3">
                             <div className="flex items-center gap-1.5 min-w-0">
                               <span className="text-[11px] font-black text-brand-700">AI 답변</span>
                               <span className="min-w-0 truncate rounded-md bg-brand-50 px-2 py-1 text-[11px] font-bold text-brand-800">
                                 {msg.data.intent}
                               </span>
-                              {msg.data.provider && msg.data.provider !== "fallback" && (
-                                <span className="shrink-0 rounded-md bg-slate-100 px-2 py-1 text-[10px] font-black tabular-nums text-slate-600">
-                                  {formatProvider(msg.data.provider, msg.data.model)} · {formatElapsed(msg.data.elapsedMs)}
-                                </span>
-                              )}
                             </div>
                             <button
                               onClick={() => handleCopyDraft(msg.id, msg.data.draft)}
@@ -268,6 +263,16 @@ export default function AICounseling({
                             </button>
                           </div>
                           <DraftTypewriter text={formatScriptParagraphs(compactScript(msg.data.draft))} onProgress={scrollToBottom} />
+                          {msg.data.provider && msg.data.provider !== "fallback" && (
+                            <div className="mt-3 flex items-center justify-between gap-2 border-t border-slate-100 pt-2">
+                              <span className="truncate text-[10px] font-black uppercase tracking-wide text-slate-400">
+                                model
+                              </span>
+                              <span className="shrink-0 rounded-md bg-slate-50 px-2 py-1 text-[10px] font-black tabular-nums text-slate-600">
+                                {formatProvider(msg.data.provider, msg.data.model)} · {formatElapsed(msg.data.elapsedMs)}
+                              </span>
+                            </div>
+                          )}
                         </div>
 
                       </motion.div>
