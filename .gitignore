@@ -4,6 +4,7 @@ dist/
 coverage/
 .DS_Store
 *.log
+*.textClipping
 .wrangler/
 .env*
 !.env.example
