@@ -1,0 +1,727 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SentiCore Proposal</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&family=Poppins:wght@600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <style>
+    :root {
+      --bg-slide: #F4F7FA;
+      --white: #FFFFFF;
+      --navy-dark: #0F172A;
+      --text-main: #334155;
+      --text-muted: #64748B;
+      --border: #E2E8F0;
+      --color-blue: #1D63B8;
+      --color-teal: #0A9371;
+      --color-purple: #8B5CF6;
+      --color-red: #EF4444;
+      --color-orange: #F59E0B;
+      --color-green: #10B981;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background-color: #0F172A;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      font-family: 'Noto Sans KR', sans-serif;
+      overflow: hidden;
+    }
+
+    #presentation-wrapper {
+      width: 1280px;
+      height: 720px;
+      position: relative;
+      transform-origin: center center;
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .slide-container {
+      background-color: var(--bg-slide);
+      width: 1280px;
+      height: 720px;
+      overflow: hidden;
+      position: absolute;
+      display: flex;
+      flex-direction: column;
+      padding: 50px 80px 75px 80px;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+      opacity: 0;
+      visibility: hidden;
+      transform: scale(0.98);
+      transition: opacity 0.5s cubic-bezier(0.4, 0, 0.2, 1),
+                  transform 0.5s cubic-bezier(0.4, 0, 0.2, 1),
+                  visibility 0.5s;
+      z-index: 1;
+    }
+
+    .slide-container.active {
+      opacity: 1;
+      visibility: visible;
+      transform: scale(1);
+      z-index: 5;
+    }
+
+    .slide-container::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: radial-gradient(circle at 100% 0%, rgba(29, 78, 216, 0.04) 0%, transparent 40%);
+      z-index: 0;
+    }
+
+    .slide-container > * { position: relative; z-index: 1; }
+    .header { margin-bottom: 25px; flex-shrink: 0; }
+    .slide-tag { color: var(--color-blue); font-family: 'Poppins'; font-size: 14px; font-weight: 700; letter-spacing: 2.5px; margin-bottom: 8px; text-transform: uppercase; }
+    .slide-title { font-size: 44px; font-weight: 700; color: var(--navy-dark); letter-spacing: -1.5px; line-height: 1.2; }
+    .content-area { flex-grow: 1; display: flex; width: 100%; flex-direction: column; justify-content: flex-start; }
+
+    .intro-layout { display: grid; grid-template-columns: 1.4fr 0.6fr; gap: 45px; align-items: center; height: 100%; }
+    .project-definition { background: #E0F2FE; color: #0369A1; padding: 20px 28px; border-radius: 10px; font-size: 18.5px; font-weight: 500; margin-bottom: 20px; border-left: 8px solid var(--color-blue); line-height: 1.6; }
+    .main-phrase { font-size: 32px; font-weight: 700; color: var(--color-blue); margin-bottom: 25px; line-height: 1.3; white-space: nowrap; }
+    .value-list { list-style: none; display: flex; flex-direction: column; gap: 14px; }
+    .value-item { background: var(--white); border: 1px solid var(--border); padding: 14px 20px; border-radius: 10px; display: flex; align-items: center; gap: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.02); }
+    .value-icon { width: 42px; height: 42px; background: #F0F9FF; color: var(--color-blue); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 17px; flex-shrink: 0; }
+    .value-text { font-size: 17.5px; color: var(--navy-dark); font-weight: 500; }
+    .image-frame { border-radius: 20px; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.1); border: 1px solid var(--border); height: 420px; background: linear-gradient(135deg, #0F172A 0%, #1E293B 100%); position: relative; display: flex; align-items: center; justify-content: center; }
+    .css-matrix-bg { position: absolute; width: 100%; height: 100%; opacity: 0.15; background-image: linear-gradient(#38bdf8 1px, transparent 1px), linear-gradient(90deg, #38bdf8 1px, transparent 1px); background-size: 20px 20px; }
+    .css-graphic-core { width: 160px; height: 160px; background: radial-gradient(circle, rgba(56,189,248,0.2) 0%, transparent 70%); border-radius: 50%; display: flex; align-items: center; justify-content: center; border: 2px dashed rgba(56, 189, 248, 0.4); animation: spin 20s linear infinite; }
+    .css-graphic-core i { font-size: 54px; color: #38bdf8; }
+    @keyframes spin { 100% { transform: rotate(360deg); } }
+
+    .card-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; width: 100%; height: 490px; align-items: stretch; }
+    .ui-card { background: var(--white); border-radius: 12px; border: 1px solid var(--border); overflow: hidden; display: flex; flex-direction: column; box-shadow: 0 8px 24px rgba(0,0,0,0.04); transition: transform 0.2s ease; }
+    .ui-card:hover { transform: translateY(-4px); }
+    .card-header { padding: 16px 20px; color: var(--white); font-size: 21px; font-weight: 700; text-align: center; flex-shrink: 0; display: flex; align-items: center; justify-content: center; gap: 10px; }
+    .bg-blue { background-color: var(--color-blue); }
+    .bg-teal { background-color: var(--color-teal); }
+    .bg-purple { background-color: var(--color-purple); }
+    .card-body { padding: 16px 15px; display: flex; flex-direction: column; gap: 7px; flex-grow: 1; }
+    .source-tag { background: #F1F5F9; border: 1px dashed #CBD5E1; padding: 7px 12px; border-radius: 6px; font-size: 13px; color: var(--navy-dark); font-weight: 600; text-align: center; }
+    .question-box { background: #F8FAFC; border: 1px solid var(--border); padding: 10px 12px; border-radius: 6px; font-size: 14px; font-weight: 700; text-align: center; line-height: 1.4; color: var(--navy-dark); }
+    .list-row { display: flex; justify-content: space-between; align-items: center; background: var(--white); border: 1px solid var(--border); padding: 9px 12px; border-radius: 6px; font-size: 14px; color: var(--text-main); font-weight: 500; white-space: nowrap; }
+    .list-row.bonus { border-left: 4px solid var(--color-teal); background: #F0FDF4; }
+    .list-row.penalty { border-left: 4px solid var(--color-red); background: #FEF2F2; }
+    .list-row .plus { color: var(--color-teal); font-weight: 700; }
+    .list-row .minus { color: var(--color-red); font-weight: 700; }
+    .calculator-interface { background: #F8FAFC; border: 1px solid var(--border); border-radius: 8px; padding: 10px; display: flex; flex-direction: column; gap: 8px; margin-top: auto; }
+    .calc-row { display: flex; justify-content: space-between; align-items: center; font-size: 12.5px; font-weight: 600; color: var(--text-main); }
+    .calc-select { padding: 3px 6px; border-radius: 4px; border: 1px solid var(--border); font-size: 12px; font-family: inherit; font-weight: 500; background: white; cursor: pointer; }
+    .calc-slider { width: 110px; cursor: pointer; }
+    .calc-result-badge { color: white; padding: 4px 10px; border-radius: 4px; font-size: 13px; font-weight: 700; text-align: center; transition: all 0.3s ease; }
+    .action-pointer { margin-top: auto; padding: 10px; border-radius: 8px; font-size: 14px; font-weight: 700; border: 1px solid var(--border); text-align: center; display: flex; align-items: center; justify-content: center; gap: 8px; flex-shrink: 0; background: #F8FAFC; }
+    .ptr-blue { border-color: var(--color-blue); color: var(--color-blue); background: #EFF6FF; }
+    .ptr-teal { border-color: var(--color-teal); color: var(--color-teal); background: #F0FDFA; }
+    .ptr-purple { border-color: var(--color-purple); color: var(--color-purple); background: #FAF5FF; }
+
+    .tech-card-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 30px; width: 100%; height: 490px; }
+    .tech-card { background: var(--white); border-radius: 16px; border: 1px solid var(--border); padding: 40px; box-shadow: 0 4px 15px rgba(0,0,0,0.02); display: flex; flex-direction: column; transition: transform 0.2s ease; }
+    .tech-card:hover { transform: translateY(-4px); }
+    .tech-card h3 { font-size: 26px; color: var(--navy-dark); margin-bottom: 25px; display: flex; align-items: center; gap: 15px; border-bottom: 2px solid #F1F5F9; padding-bottom: 15px; }
+    .tech-card h3 i { color: var(--color-blue); }
+    .tech-card ul { list-style: none; }
+    .tech-card li { font-size: 19px; color: var(--text-main); margin-bottom: 20px; padding-left: 30px; position: relative; line-height: 1.6; }
+    .tech-card li::before { content: "\f058"; font-family: "Font Awesome 6 Free"; font-weight: 900; color: var(--color-blue); position: absolute; left: 0; top: 2px; font-size: 18px; }
+
+    .dashboard-layout { display: grid; grid-template-columns: 0.95fr 1.05fr; gap: 25px; width: 100%; height: 490px; align-items: stretch; }
+    .table-wrapper { background: var(--white); border-radius: 12px; border: 1px solid var(--border); overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.03); display: flex; flex-direction: column; }
+    .demo-table { width: 100%; border-collapse: collapse; }
+    .demo-table th { background: #F8FAFC; color: var(--navy-dark); padding: 12px 10px; text-align: left; font-size: 13px; border-bottom: 2px solid var(--border); font-weight: 700; }
+    .demo-table td { padding: 10px; border-bottom: 1px solid var(--border); font-size: 12.5px; color: var(--text-main); vertical-align: middle; word-break: keep-all; }
+    .demo-table tr { cursor: pointer; transition: background 0.2s ease; }
+    .demo-table tr:hover { background: #F8FAFC; }
+    .demo-table tr.selected-row { background: #F0F6FF; border-left: 4px solid var(--color-blue); }
+    .demo-table tr.selected-row td { font-weight: 500; }
+    .demo-table b { color: var(--navy-dark); font-weight: 700; }
+    .nowrap-cell { white-space: nowrap; font-weight: 500; }
+    .badge { padding: 5px 10px; border-radius: 6px; font-size: 12px; font-weight: 700; color: white; display: inline-block; white-space: nowrap; text-align: center; min-width: 86px; }
+    .bg-red { background: #EF4444; }
+    .bg-orange { background: #F59E0B; }
+    .bg-green { background: #10B981; }
+
+    .terminal-panel { background: #0F172A; border-radius: 12px; border: 1px solid rgba(255,255,255,0.1); padding: 18px; color: #E2E8F0; display: flex; flex-direction: column; gap: 12px; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25); }
+    .terminal-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 10px; }
+    .terminal-title { font-family: 'Poppins', sans-serif; font-size: 15px; font-weight: 700; color: #38BDF8; display: flex; align-items: center; gap: 8px; }
+    .live-pulse { width: 8px; height: 8px; background-color: #10B981; border-radius: 50%; animation: pulse 1.5s infinite; }
+    @keyframes pulse { 0% { transform: scale(0.9); opacity: 1; } 50% { transform: scale(1.2); opacity: 0.5; } 100% { transform: scale(0.9); opacity: 1; } }
+    .terminal-metrics { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+    .metric-box { background: rgba(255,255,255,0.05); border-radius: 6px; padding: 8px 10px; text-align: center; }
+    .metric-label { font-size: 10.5px; color: #94A3B8; margin-bottom: 4px; }
+    .metric-val { font-family: 'Poppins', sans-serif; font-size: 17px; font-weight: 700; color: #F8FAFC; }
+    .metric-val.score-accent { color: #64FFDA; }
+    .metric-bar { width: 100%; height: 4px; background: rgba(255,255,255,0.1); border-radius: 2px; margin-top: 5px; overflow: hidden; }
+    .metric-bar-fill { height: 100%; border-radius: 2px; width: 0%; transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1); }
+    .terminal-signals { background: rgba(0, 0, 0, 0.2); border: 1px solid rgba(255,255,255,0.05); border-radius: 6px; padding: 10px 12px; font-size: 12px; }
+    .signals-title { font-weight: 700; color: #94A3B8; margin-bottom: 6px; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; }
+    .signals-list { list-style: none; display: flex; flex-direction: column; gap: 4px; }
+    .signal-item { display: flex; align-items: flex-start; gap: 6px; line-height: 1.35; }
+    .signal-item.gain { color: #34D399; }
+    .signal-item.loss { color: #F87171; }
+    .script-terminal-box { background: #020617; border-radius: 6px; padding: 12px 14px; flex-grow: 1; border-left: 3px solid #38BDF8; font-family: inherit; font-size: 13px; line-height: 1.5; color: #E2E8F0; display: flex; flex-direction: column; justify-content: flex-start; min-height: 120px; }
+    .script-header-text { font-size: 11px; color: #64748B; font-weight: 700; margin-bottom: 7px; letter-spacing: 0.5px; text-transform: uppercase; }
+    .typing-cursor::after { content: '|'; animation: blink 0.8s infinite; }
+    @keyframes blink { 50% { opacity: 0; } }
+    .gemma-meta { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; font-size: 11.5px; color: #CBD5E1; }
+    .gemma-meta-box { background: rgba(56,189,248,0.08); border: 1px solid rgba(56,189,248,0.14); border-radius: 6px; padding: 7px 9px; line-height: 1.35; }
+    .sandbox-controls { display: flex; gap: 10px; align-items: center; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 10px; }
+    .sandbox-btn { background: rgba(56, 189, 248, 0.1); border: 1px solid rgba(56, 189, 248, 0.3); color: #38BDF8; padding: 6px 10px; border-radius: 4px; font-size: 12px; font-weight: 600; cursor: pointer; transition: all 0.2s ease; flex: 1; text-align: center; }
+    .sandbox-btn:hover { background: #38BDF8; color: #0F172A; }
+    .footer { position: absolute; bottom: 20px; left: 80px; font-size: 14px; color: var(--text-muted); width: 87%; line-height: 1.5; border-top: 1px solid var(--border); padding-top: 12px; flex-shrink: 0; }
+    .presentation-tip { position: fixed; top: 20px; right: 30px; background: #0F172A; color: #64FFDA; padding: 8px 16px; border-radius: 6px; font-size: 13px; font-weight: bold; font-family: 'Poppins', sans-serif; z-index: 100; box-shadow: 0 4px 12px rgba(0,0,0,0.25); display: flex; align-items: center; gap: 8px; }
+
+    @media print {
+      body { background: none; padding: 0; gap: 0; overflow: visible !important; }
+      #presentation-wrapper { transform: none !important; width: auto !important; height: auto !important; }
+      .slide-container { position: relative !important; display: flex !important; opacity: 1 !important; visibility: visible !important; transform: none !important; margin-bottom: 40px; box-shadow: none; page-break-after: always; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+      .presentation-tip { display: none !important; }
+    }
+  </style>
+</head>
+<body>
+<div class="presentation-tip"><i class="fa-solid fa-keyboard"></i> 방향키(←, →) 또는 스페이스 바로 화면 전환</div>
+<div id="presentation-wrapper">
+  <div class="slide-container" id="slide1">
+    <div class="header">
+      <div class="slide-tag">PROJECT DEFINITION</div>
+      <h2 class="slide-title">AI 상담보조 시스템: SentiCore</h2>
+    </div>
+    <div class="content-area">
+      <div class="intro-layout">
+        <div>
+          <div class="main-phrase">AI는 기준을 만들고 사람은 판단에 집중합니다</div>
+          <div class="project-definition">
+            SentiCore는 고객의 감성(Sentiment) 데이터와 금융 코어(Core) 데이터를 결합하여 최적의 상담 가이드라인을 도출하는 지능형 판단 보조 시스템입니다.
+          </div>
+          <div class="value-list">
+            <div class="value-item"><div class="value-icon"><i class="fa-solid fa-gauge-high"></i></div><div class="value-text">상담 화면 진입 시 고객별 핵심 상태 및 대응 전략 <strong>실시간 표시</strong></div></div>
+            <div class="value-item"><div class="value-icon"><i class="fa-solid fa-chart-line"></i></div><div class="value-text">데이터 기반 표준 분류체계를 통한 <strong>상담 품질의 상향 평준화</strong></div></div>
+            <div class="value-item"><div class="value-icon"><i class="fa-solid fa-shield-halved"></i></div><div class="value-text">행동 데이터 연계로 악성 민원 및 채권 리스크 <strong>사전 경고 시스템 구축</strong></div></div>
+          </div>
+        </div>
+        <div class="image-frame">
+          <div class="css-matrix-bg"></div>
+          <div class="css-graphic-core"><i class="fa-solid fa-brain"></i></div>
+        </div>
+      </div>
+    </div>
+    <div class="footer">SentiCore Strategy Overview | 기존 데이터 자산 100% 활용 및 폐쇄망 내 보안 확보 기반</div>
+  </div>
+
+  <div class="slide-container" id="slide2">
+    <div class="header">
+      <div class="slide-tag">JUDGMENT LOGIC</div>
+      <h2 class="slide-title">AI가 설계한 판단 체계</h2>
+    </div>
+    <div class="content-area">
+      <div class="card-grid">
+        <div class="ui-card">
+          <div class="card-header bg-blue"><i class="fa-solid fa-layer-group"></i> 01 회수 단계 분류</div>
+          <div class="card-body">
+            <div class="source-tag">중앙회 환원테이블 연동</div>
+            <div class="question-box">"이 고객, 지금 어떤 상황인가?"<br><span style="font-size:11px; font-weight:400; color:var(--text-muted);">(중앙회 전산 정보 실시간 연동)</span></div>
+            <div class="list-row"><span>1단계: 정상 / D+0</span><strong>&rarr; 안내 단계</strong></div>
+            <div class="list-row"><span>2단계: 단기 연체</span><strong>&rarr; 독촉 단계</strong></div>
+            <div class="list-row"><span>3단계: D+30 이상</span><strong>&rarr; 경고 단계</strong></div>
+            <div class="list-row"><span>4단계: D+60 이상</span><strong>&rarr; 예고 단계</strong></div>
+            <div class="list-row"><span>5단계: D+90 이상</span><strong>&rarr; 법적 단계</strong></div>
+            <div class="action-pointer ptr-blue"><i class="fa-solid fa-route"></i> 단계별 표준 대응절차 확립</div>
+          </div>
+        </div>
+        <div class="ui-card">
+          <div class="card-header bg-teal"><i class="fa-solid fa-magnifying-glass-chart"></i> 02 행동 신호 분석</div>
+          <div class="card-body">
+            <div class="source-tag">상담이력 내 핵심 데이터 추출</div>
+            <div class="question-box">"단순 말투가 아닌 '행동'을 봅니다"<br><span style="font-size:11px; font-weight:400; color:var(--color-teal);">(상담이력 내 주요 키워드 및 시그널 분석)</span></div>
+            <div class="list-row bonus"><span>납부의사/구체적 기일 제시</span><strong class="plus">+ 가점</strong></div>
+            <div class="list-row bonus"><span>자료 제출 및 회신 협조</span><strong class="plus">+ 가점</strong></div>
+            <div class="list-row penalty"><span>연락 거부 및 통화 강제종료</span><strong class="minus">- 감점</strong></div>
+            <div class="list-row penalty"><span>악성 민원 징후 및 항의 발화</span><strong class="minus">- 감점</strong></div>
+            <div class="action-pointer ptr-teal"><i class="fa-solid fa-chart-line"></i> 상담 가능성(Score) 자동 산출</div>
+          </div>
+        </div>
+        <div class="ui-card">
+          <div class="card-header bg-purple"><i class="fa-solid fa-list-check"></i> 03 우선순위 분류</div>
+          <div class="card-body">
+            <div class="source-tag">회수 단계 &times; 행동 분석 조합</div>
+            <div class="question-box">"우선순위 배정 기준은?"<br><span style="font-size:11px; font-weight:400; color:var(--color-purple);">(종합 매트릭스 알고리즘 연산)</span></div>
+            <div class="calculator-interface">
+              <div style="font-size:11.5px; font-weight:700; color:var(--color-purple); text-align:center; border-bottom:1px solid var(--border); padding-bottom:4px; margin-bottom:2px;"><i class="fa-solid fa-calculator"></i> SentiCore 로직 계산기 (시연용)</div>
+              <div class="calc-row"><span>회수 단계 선택:</span><select id="calc-step-select" class="calc-select" onchange="runLiveCalculator()"><option value="1">Step 1 (정상)</option><option value="2">Step 2 (독촉)</option><option value="3">Step 3 (경고)</option><option value="4">Step 4 (예고)</option><option value="5" selected>Step 5 (법적)</option></select></div>
+              <div class="calc-row"><span>감성 점수 (<span id="calc-score-val">24</span>점):</span><input type="range" id="calc-score-slider" class="calc-slider" min="0" max="100" value="24" oninput="runLiveCalculator()"></div>
+              <div class="calc-row" style="margin-top:2px;"><span>연산 우선순위 결과:</span><div id="calc-result" class="calc-result-badge">긴급 대응</div></div>
+            </div>
+            <div class="action-pointer ptr-purple"><i class="fa-solid fa-calendar-check"></i> 오늘 먼저 할 일 자동 결정</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="footer">SentiCore 세부 구동 매커니즘: 원천 자산 결합 기반 실시간 피딩 가이드라인</div>
+  </div>
+
+  <div class="slide-container" id="slide3">
+    <div class="header">
+      <div class="slide-tag">STRATEGY</div>
+      <h2 class="slide-title">구현 전략 및 유효성 검증 방향</h2>
+    </div>
+    <div class="content-area">
+      <div class="tech-card-grid">
+        <div class="tech-card">
+          <h3><i class="fa-solid fa-shield-halved"></i> 보안 및 인프라 방향</h3>
+          <ul>
+            <li><strong>독립적 폐쇄망 구동:</strong> 외부 네트워크 차단 환경 내 단독 구동으로 데이터 보안 완벽 보장</li>
+            <li><strong>금융권 보안 요건 충족:</strong> 고객 정보 유출 리스크 없는 안전한 sLLM 연동 체계 구축</li>
+            <li><strong>가용 자원 최적화:</strong> 고사양 GPU 서버 신설 없이 내부 인프라 내 효율적 구동 타진</li>
+          </ul>
+        </div>
+        <div class="tech-card">
+          <h3><i class="fa-solid fa-vial-circle-check"></i> 품질 검증 및 향후 과제</h3>
+          <ul>
+            <li><strong>답변 적정성 집중:</strong> 기술적 메커니즘보다 생성된 <strong>답변의 실무 적합성</strong> 검증에 우선 순위</li>
+            <li><strong>경량 모델 로컬 테스트:</strong> 오픈소스 모델을 통한 가이드라인 및 초안 작성 품질 사전 확인</li>
+            <li><strong>현업 피드백 루프:</strong> 실제 상담원의 사용성 평가를 통한 단계적 고도화 및 영점 조절</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+    <div class="footer">※ 본 자료는 기획 단계의 예시이며, 향후 정밀 품질 검증(PoC)을 통해 고도화할 예정입니다.</div>
+  </div>
+
+  <div class="slide-container" id="slide4">
+    <div class="header">
+      <div class="slide-tag">REAL DATA SIMULATION</div>
+      <h2 class="slide-title">실제 고객 데이터 기반 Gemma 답변 검증</h2>
+    </div>
+    <div class="content-area">
+      <div class="dashboard-layout">
+        <div class="table-wrapper">
+          <div style="background:#F8FAFC; padding:12px; font-weight:700; font-size:14px; border-bottom:1px solid var(--border); color:var(--navy-dark);">
+            <i class="fa-solid fa-users"></i> Senticore 검증용 실제 고객 데이터 (행 클릭 시 Gemma 답변 전환)
+          </div>
+          <table class="demo-table">
+            <thead>
+              <tr>
+                <th style="width: 95px;">단계</th>
+                <th style="width: 78px;">고객명</th>
+                <th>실제 계좌/상담 핵심</th>
+                <th style="width: 98px;">Gemma 판단</th>
+              </tr>
+            </thead>
+            <tbody id="simulation-table-body"></tbody>
+          </table>
+        </div>
+
+        <div class="terminal-panel">
+          <div class="terminal-header">
+            <div class="terminal-title"><span class="live-pulse"></span> Ollama Gemma Real Response</div>
+            <div id="live-priority-badge" class="badge bg-red">고위험</div>
+          </div>
+
+          <div class="terminal-metrics">
+            <div class="metric-box">
+              <div class="metric-label">감성</div>
+              <div class="metric-val score-accent"><span id="live-score-val">20</span></div>
+              <div class="metric-bar"><div id="bar-score" class="metric-bar-fill" style="background:#64FFDA;"></div></div>
+            </div>
+            <div class="metric-box">
+              <div class="metric-label">협조</div>
+              <div class="metric-val"><span id="live-coop-val">30</span></div>
+              <div class="metric-bar"><div id="bar-coop" class="metric-bar-fill" style="background:#38BDF8;"></div></div>
+            </div>
+            <div class="metric-box">
+              <div class="metric-label">안정</div>
+              <div class="metric-val"><span id="live-stab-val">10</span></div>
+              <div class="metric-bar"><div id="bar-stab" class="metric-bar-fill" style="background:#FB7185;"></div></div>
+            </div>
+            <div class="metric-box">
+              <div class="metric-label">응답</div>
+              <div class="metric-val"><span id="live-time-val">32</span>초</div>
+              <div class="metric-bar"><div id="bar-time" class="metric-bar-fill" style="background:#FBBF24;"></div></div>
+            </div>
+          </div>
+
+          <div class="gemma-meta">
+            <div class="gemma-meta-box"><strong>질문</strong><br><span id="live-question"></span></div>
+            <div class="gemma-meta-box"><strong>의도</strong><br><span id="live-intent"></span></div>
+          </div>
+
+          <div class="terminal-signals">
+            <div class="signals-title">Gemma 포착 신호 및 다음 조치</div>
+            <ul id="live-signals-list" class="signals-list"></ul>
+          </div>
+
+          <div class="script-terminal-box">
+            <div class="script-header-text"><i class="fa-solid fa-comment-dots"></i> 실제 생성된 고객 답변</div>
+            <div id="live-ai-script" class="typing-cursor" style="font-weight: 500;"></div>
+          </div>
+
+          <div class="sandbox-controls">
+            <div style="font-size:11.5px; font-weight:700; color:#94A3B8; white-space:nowrap; margin-right:5px;"><i class="fa-solid fa-vials"></i> 고객별 2개 질문:</div>
+            <button class="sandbox-btn" onclick="selectScenario(0)">질문 1</button>
+            <button class="sandbox-btn" onclick="selectScenario(1)">질문 2</button>
+            <button class="sandbox-btn" onclick="resetLiveTerminal()">초기화</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="footer">
+      <strong>확인 포인트:</strong> 로컬 Gemma는 고객별 질문에 대해 답변 초안까지 생성한다. 단, 최종 운영에는 Senticore의 스키마 보정과 준법 문구 보정이 필요하다.
+    </div>
+  </div>
+</div>
+
+<script>
+  function adjustScale() {
+    const wrapper = document.getElementById('presentation-wrapper');
+    if (!wrapper) return;
+    const scale = Math.min(window.innerWidth / 1280, window.innerHeight / 720);
+    wrapper.style.transform = window.matchMedia('print').matches ? 'none' : `scale(${scale})`;
+  }
+  window.addEventListener('resize', adjustScale);
+  window.addEventListener('load', adjustScale);
+  document.addEventListener('DOMContentLoaded', adjustScale);
+
+  function runLiveCalculator() {
+    const step = parseInt(document.getElementById('calc-step-select').value);
+    const score = parseInt(document.getElementById('calc-score-slider').value);
+    document.getElementById('calc-score-val').textContent = score;
+    const resultBadge = document.getElementById('calc-result');
+    if (step === 5 || score <= 25) {
+      resultBadge.textContent = "긴급 대응";
+      resultBadge.style.backgroundColor = "#EF4444";
+    } else if (step >= 3 || score < 61) {
+      resultBadge.textContent = "집중 관리";
+      resultBadge.style.backgroundColor = "#F59E0B";
+    } else {
+      resultBadge.textContent = "상시 안내";
+      resultBadge.style.backgroundColor = "#10B981";
+    }
+  }
+
+  const customersDataset = [
+    {
+      id: 0,
+      step: "5단계",
+      name: "박재원",
+      risk: "차량담보대출 | D+124 | 회수 D | 고정 | 개인회생·경매·채권보전·민원위험 | 전화거부·문자선호",
+      priority: "고위험",
+      badgeClass: "bg-red",
+      scenarios: [
+        {
+          question: "법적조치가 정확히 언제 들어가나요? 전화는 받기 어렵고 문자로만 알려주세요.",
+          intent: "상환 일정 및 법적 조치 문의",
+          score: 20,
+          coop: 30,
+          stab: 10,
+          time: 32,
+          answer: "고객님, 현재 상황에 대해 어려움을 느끼시는 점 충분히 이해합니다. 법적 조치 시점과 관련하여는 구체적인 상담이 필요하오니, 문자 메시지로 편하신 시간을 알려주시겠어요? 저희가 가능한 범위 내에서 최선의 해결 방안을 함께 찾아드리겠습니다.",
+          signals: [
+            { type: "loss", text: "법적조치 문의, 전화 거부, 상환 어려움 호소" },
+            { type: "loss", text: "문자 발송 전제로 상담 재시도" },
+            { type: "loss", text: "법적조치 단정 대신 내부 가이드라인 확인 필요" }
+          ]
+        },
+        {
+          question: "개인회생 접수했는데 그래도 차량 경매가 진행되나요?",
+          intent: "채무상황변화에 따른 담보권 실행 가능성 문의",
+          score: 30,
+          coop: 40,
+          stab: 20,
+          time: 21,
+          answer: "고객님, 개인회생 접수와 관련하여 차량 경매 진행 여부에 대해 문의주셨습니다. 현재 상황에 대해서는 법률 전문가와 상담하시는 것이 가장 정확합니다. 추후 진행 상황에 대해서는 문자 메시지로 안내드리겠습니다.",
+          signals: [
+            { type: "loss", text: "개인회생 접수, 경매, 민원 위험 신호" },
+            { type: "loss", text: "법적 효력 단정 금지" },
+            { type: "gain", text: "문자 선호 채널 반영" }
+          ]
+        }
+      ]
+    },
+    {
+      id: 1,
+      step: "4단계",
+      name: "오민석",
+      risk: "신용대출 | D+82 | 회수 E | 회수의문 | 새출발기금·민원위험 | 전화거부·이메일선호",
+      priority: "고위험",
+      badgeClass: "bg-red",
+      scenarios: [
+        {
+          question: "새출발기금 접수했는데 추심이 중단되는 건가요?",
+          intent: "채무상황 문의",
+          score: 40,
+          coop: 3,
+          stab: 2,
+          time: 22,
+          answer: "고객님께서 새출발기금 접수와 관련하여 문의주신 내용에 대해 확인이 필요합니다. 접수하신 건에 대한 추심 중단 여부는 구체적인 처리 절차에 따라 달라질 수 있습니다. 자세한 내용은 이메일로 다시 안내드리겠습니다.",
+          signals: [
+            { type: "loss", text: "새출발기금 및 민원 위험 신호" },
+            { type: "loss", text: "추심 중단 여부 단정 금지" },
+            { type: "gain", text: "이메일 선호 채널 반영" }
+          ]
+        },
+        {
+          question: "필요 서류를 이메일로 다시 보내주세요. 전화는 부담됩니다.",
+          intent: "서류 재요청 및 연락 방식 선호 확인",
+          score: 65,
+          coop: 70,
+          stab: 40,
+          time: 23,
+          answer: "필요 서류를 이메일로 다시 보내드리겠습니다. 혹시 이메일 주소 확인 부탁드려도 될까요? 전화 통화가 부담스러우시다는 점 충분히 이해합니다.",
+          signals: [
+            { type: "gain", text: "서류 재요청으로 협조 가능성 확인" },
+            { type: "loss", text: "전화 부담 표현" },
+            { type: "gain", text: "이메일 주소 확인 후 서류 재전송" }
+          ]
+        }
+      ]
+    },
+    {
+      id: 2,
+      step: "3단계",
+      name: "김철수",
+      risk: "사잇돌 | D+45 | 회수 C | 요주의 | 상환의지 있음 | DM 제한·전화/문자 선호",
+      priority: "집중",
+      badgeClass: "bg-orange",
+      scenarios: [
+        {
+          question: "이번 주에 일부만 납부하고 나머지는 분할로 할 수 있나요?",
+          intent: "상환 일정 조정 문의",
+          score: 65,
+          coop: 80,
+          stab: 70,
+          time: 27,
+          answer: "고객님, 현재 상황에 맞춰 상환 계획을 조정하는 방안을 함께 검토해 보겠습니다. 먼저 가능한 납부 옵션과 분할 상환의 구체적인 조건을 안내해 드릴 수 있습니다. 편하신 시간에 다시 연락 주시면 자세한 상담을 도와드리겠습니다.",
+          signals: [
+            { type: "gain", text: "부분 납부 및 분할 상환 요청" },
+            { type: "gain", text: "상환 의지 확인" },
+            { type: "loss", text: "분할 가능 여부 확답 전 내부 조건 확인 필요" }
+          ]
+        },
+        {
+          question: "내용증명 오기 전에 30만 원이라도 먼저 내면 괜찮을까요?",
+          intent: "부분 상환 문의",
+          score: 75,
+          coop: 85,
+          stab: 70,
+          time: 28,
+          answer: "김철수 고객님, 먼저 상환 의지를 보여주셔서 감사합니다. 문의주신 30만 원 부분 상환에 대해서는 담당 부서와 확인 후 안내드리겠습니다. 잠시만 기다려 주시면 가장 적절한 방법을 안내드리겠습니다.",
+          signals: [
+            { type: "gain", text: "소액 선납 의사와 상환 의지 확인" },
+            { type: "gain", text: "긍정적 분위기 유지 가능" },
+            { type: "loss", text: "즉시 가능 여부 확답 금지" }
+          ]
+        }
+      ]
+    },
+    {
+      id: 3,
+      step: "2단계",
+      name: "정서윤",
+      risk: "신용대출 | D+18 | 회수 B | 요주의 | 상환의지 있음 | 전화/문자 선호",
+      priority: "집중",
+      badgeClass: "bg-orange",
+      scenarios: [
+        {
+          question: "급여일 이후에 70만 원 먼저 납부하고 싶습니다.",
+          intent: "상환 일정 조정 문의",
+          score: 75,
+          coop: 85,
+          stab: 70,
+          time: 22,
+          answer: "고객님, 상환 계획에 대해 적극적으로 협조해 주셔서 감사합니다. 문의주신 금액과 시점에 대해 담당 부서와 확인 후 가장 적절한 방안을 안내드리겠습니다. 잠시만 기다려 주시면 자세한 내용을 다시 말씀드리겠습니다.",
+          signals: [
+            { type: "gain", text: "구체적 금액과 시점 제시" },
+            { type: "gain", text: "상환 의지 높음" },
+            { type: "loss", text: "내부 프로세스 확인 후 안내 필요" }
+          ]
+        },
+        {
+          question: "자동이체 계좌를 바꾸고 싶은데 지금 연체 상태에서도 변경 가능한가요?",
+          intent: "자동이체 계좌 변경 문의",
+          score: 75,
+          coop: 80,
+          stab: 60,
+          time: 24,
+          answer: "고객님, 자동이체 계좌 변경에 대해 문의주셨군요. 현재 연체 상태이시더라도 변경 가능 여부를 확인해 드리겠습니다. 자세한 절차와 필요한 서류에 대해 안내드리겠습니다.",
+          signals: [
+            { type: "gain", text: "계좌 변경으로 납부 지속 의사 확인" },
+            { type: "gain", text: "절차 및 필요 서류 안내 가능" },
+            { type: "loss", text: "연체 상태 조건 확인 필요" }
+          ]
+        }
+      ]
+    },
+    {
+      id: 4,
+      step: "1단계",
+      name: "최미래",
+      risk: "햇살론 | 정상납부 | 회수 A | 정상 | 우호적·협조적 고객",
+      priority: "상시",
+      badgeClass: "bg-green",
+      scenarios: [
+        {
+          question: "이번 달 정상납부 처리됐는지 확인 부탁드립니다.",
+          intent: "납부 확인 요청",
+          score: 95,
+          coop: 90,
+          stab: 95,
+          time: 19,
+          answer: "고객님, 이번 달 정상 납부 처리가 완료되었는지 확인 요청 주셨군요. 현재 시스템을 통해 납부 내역을 확인해 드리겠습니다. 잠시만 기다려 주시면 정확한 처리 결과를 안내드리겠습니다.",
+          signals: [
+            { type: "gain", text: "정상 납부 확인 요청" },
+            { type: "gain", text: "감성·협조·안정 지표 모두 양호" },
+            { type: "gain", text: "조회 후 긍정 확인 메시지 전달" }
+          ]
+        },
+        {
+          question: "완납하면 증빙자료는 문자나 이메일로 받을 수 있나요?",
+          intent: "완납 증빙자료 수령 문의",
+          score: 95,
+          coop: 100,
+          stab: 98,
+          time: 20,
+          answer: "고객님, 완납 후 증빙자료 수령 방법에 대해 문의주셨군요. 네, 완납 처리 완료 후 원하시는 방법(문자 또는 이메일)으로 관련 증빙자료를 보내드리겠습니다. 혹시 선호하시는 연락처나 이메일 주소가 있으신가요?",
+          signals: [
+            { type: "gain", text: "완납 의사와 증빙자료 요청" },
+            { type: "gain", text: "협조도 매우 높음" },
+            { type: "gain", text: "수신 채널 재확인 후 발송 안내" }
+          ]
+        }
+      ]
+    }
+  ];
+
+  let selectedCustomerId = 0;
+  let selectedScenarioIndex = 0;
+  let typingTimer = null;
+
+  function initSimulationTable() {
+    const tbody = document.getElementById('simulation-table-body');
+    if (!tbody) return;
+    tbody.innerHTML = '';
+    customersDataset.forEach(cust => {
+      const tr = document.createElement('tr');
+      tr.id = `cust-row-${cust.id}`;
+      tr.onclick = () => selectCustomer(cust.id);
+      tr.innerHTML = `
+        <td class="nowrap-cell"><strong>${cust.step}</strong></td>
+        <td class="nowrap-cell">${cust.name}</td>
+        <td>${cust.risk}</td>
+        <td><span class="badge ${cust.badgeClass}">${cust.priority}</span></td>
+      `;
+      tbody.appendChild(tr);
+    });
+    selectCustomer(0);
+  }
+
+  function selectCustomer(id) {
+    selectedCustomerId = id;
+    selectedScenarioIndex = 0;
+    document.querySelectorAll('#simulation-table-body tr').forEach(row => row.classList.remove('selected-row'));
+    const selectedRow = document.getElementById(`cust-row-${id}`);
+    if (selectedRow) selectedRow.classList.add('selected-row');
+    updateLiveTerminal(customersDataset[id], selectedScenarioIndex);
+  }
+
+  function selectScenario(index) {
+    selectedScenarioIndex = index;
+    updateLiveTerminal(customersDataset[selectedCustomerId], selectedScenarioIndex);
+  }
+
+  function updateLiveTerminal(customer, scenarioIndex) {
+    const data = customer.scenarios[scenarioIndex];
+    const badge = document.getElementById('live-priority-badge');
+    if (badge) {
+      badge.textContent = `${customer.priority} · 질문 ${scenarioIndex + 1}`;
+      badge.className = `badge ${customer.badgeClass}`;
+    }
+
+    document.getElementById('live-score-val').textContent = data.score;
+    document.getElementById('live-coop-val').textContent = data.coop;
+    document.getElementById('live-stab-val').textContent = data.stab;
+    document.getElementById('live-time-val').textContent = data.time;
+    document.getElementById('bar-score').style.width = `${data.score}%`;
+    document.getElementById('bar-coop').style.width = `${data.coop}%`;
+    document.getElementById('bar-stab').style.width = `${data.stab}%`;
+    document.getElementById('bar-time').style.width = `${Math.min(100, Math.round((data.time / 32) * 100))}%`;
+    document.getElementById('live-question').textContent = data.question;
+    document.getElementById('live-intent').textContent = data.intent;
+
+    const signalContainer = document.getElementById('live-signals-list');
+    signalContainer.innerHTML = '';
+    data.signals.forEach(sig => {
+      const li = document.createElement('li');
+      li.className = `signal-item ${sig.type}`;
+      const icon = sig.type === 'gain' ? '<i class="fa-solid fa-circle-plus"></i>' : '<i class="fa-solid fa-circle-minus"></i>';
+      li.innerHTML = `${icon} <span>${sig.text}</span>`;
+      signalContainer.appendChild(li);
+    });
+    typeAIScript(data.answer);
+  }
+
+  function typeAIScript(text) {
+    const textContainer = document.getElementById('live-ai-script');
+    textContainer.textContent = '';
+    if (typingTimer) clearInterval(typingTimer);
+    let i = 0;
+    typingTimer = setInterval(() => {
+      if (i < text.length) {
+        textContainer.textContent += text.charAt(i);
+        i++;
+      } else {
+        clearInterval(typingTimer);
+      }
+    }, 15);
+  }
+
+  function resetLiveTerminal() {
+    selectedScenarioIndex = 0;
+    updateLiveTerminal(customersDataset[selectedCustomerId], selectedScenarioIndex);
+  }
+
+  let currentSlide = 0;
+  const slides = document.querySelectorAll('.slide-container');
+
+  function showSlide(index) {
+    slides.forEach((slide, i) => slide.classList.toggle('active', i === index));
+    if (index === 1) runLiveCalculator();
+    if (index === 3) initSimulationTable();
+  }
+
+  showSlide(currentSlide);
+
+  document.addEventListener('keydown', (e) => {
+    if (e.target.tagName === 'SELECT' || e.target.tagName === 'INPUT') return;
+    if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'Enter') {
+      e.preventDefault();
+      currentSlide = (currentSlide + 1) % slides.length;
+      showSlide(currentSlide);
+    } else if (e.key === 'ArrowLeft') {
+      e.preventDefault();
+      currentSlide = (currentSlide - 1 + slides.length) % slides.length;
+      showSlide(currentSlide);
+    }
+  });
+
+  window.addEventListener('click', (e) => {
+    if (!e.target.closest('.calculator-interface') && !e.target.closest('.terminal-panel') && !e.target.closest('.table-wrapper')) {
+      document.body.focus();
+    }
+  });
+</script>
+</body>
+</html>
