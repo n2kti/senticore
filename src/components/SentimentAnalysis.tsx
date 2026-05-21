@@ -13,6 +13,7 @@ interface SentimentAnalysisProps {
 
 export default function SentimentAnalysis({ history, customer, guidance }: SentimentAnalysisProps) {
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isScoringOpen, setIsScoringOpen] = useState(false);
 
   const avgScore = Math.round(
     history.reduce((acc, curr) => acc + curr.sentimentScore, 0) / (history.length || 1)
@@ -77,9 +78,14 @@ export default function SentimentAnalysis({ history, customer, guidance }: Senti
             <Heart className="w-5 h-5 text-red-500" />
             감성 분석
           </h3>
-          <span className={cn("text-[10px] px-2 py-0.5 rounded-full font-bold bg-slate-100 text-slate-600")}>
-            Sentiment Score
-          </span>
+          <button
+            type="button"
+            onClick={() => setIsScoringOpen(true)}
+            className="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-bold text-slate-600 transition-colors hover:bg-brand-50 hover:text-brand-700"
+            title="감성 점수 채점 기준"
+          >
+            채점 기준
+          </button>
         </div>
 
         <div className="flex-1 min-h-0 grid grid-rows-2 gap-3">
@@ -144,6 +150,50 @@ export default function SentimentAnalysis({ history, customer, guidance }: Senti
       </div>
 
       <AnimatePresence>
+        {isScoringOpen && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.96, y: 12 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.96, y: 12 }}
+              className="w-full max-w-xl overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-2xl"
+            >
+              <div className="flex items-center justify-between border-b border-slate-100 bg-slate-50 p-5">
+                <div>
+                  <h2 className="text-lg font-black text-slate-900">감성 점수 채점 기준</h2>
+                  <p className="mt-1 text-sm font-bold text-slate-500">상담 가능성과 응대 톤을 정하기 위한 내부 기준입니다.</p>
+                </div>
+                <button
+                  onClick={() => setIsScoringOpen(false)}
+                  className="rounded-lg p-2 text-slate-400 transition-colors hover:bg-slate-200 hover:text-slate-700"
+                >
+                  <X className="h-5 w-5" />
+                </button>
+              </div>
+
+              <div className="space-y-4 p-5">
+                {[
+                  { range: '0-30', label: '부정적', tone: 'text-red-600', detail: '상담 거부, 강한 불만, 민원 위험. 공감 우선, 압박 금지.' },
+                  { range: '31-60', label: '관찰', tone: 'text-amber-600', detail: '불안정하거나 확약 부족. 짧고 중립적으로 납부 가능일과 금액 확인.' },
+                  { range: '61-80', label: '협조적', tone: 'text-emerald-600', detail: '상환 협의 가능. 분할납부, 납부일 협의 중심으로 안내.' },
+                  { range: '81-100', label: '매우 협조적', tone: 'text-brand-600', detail: '감사 표현, 빠른 회신, 정상 납부. 관계 유지와 리마인드 중심.' },
+                ].map((item) => (
+                  <div key={item.range} className="rounded-xl border border-slate-200 bg-white p-4">
+                    <div className="flex items-center gap-3">
+                      <span className={cn('w-20 shrink-0 rounded-lg bg-slate-50 px-2 py-1 text-center text-sm font-black tabular-nums whitespace-nowrap', item.tone)}>{item.range}</span>
+                      <p className="text-sm font-black text-slate-900">{item.label}</p>
+                    </div>
+                    <p className="mt-2 text-sm font-bold leading-relaxed text-slate-600">{item.detail}</p>
+                  </div>
+                ))}
+                <p className="rounded-xl bg-slate-50 p-4 text-xs font-bold leading-relaxed text-slate-500">
+                  점수는 고객의 단순 기분이 아니라 납부 의사, 일정/금액 구체성, 회신 여부, 연락 거부, 민원 위험을 함께 본 상담 가능성 지표입니다.
+                </p>
+              </div>
+            </motion.div>
+          </div>
+        )}
+
         {isModalOpen && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
             <motion.div 
@@ -194,23 +244,29 @@ export default function SentimentAnalysis({ history, customer, guidance }: Senti
                     상담 이력별 감성 데이터
                   </h3>
                   <div className="border border-slate-100 rounded-2xl overflow-hidden shadow-sm">
-                    <table className="w-full text-left border-collapse">
+                    <table className="w-full table-fixed text-left border-collapse">
+                      <colgroup>
+                        <col className="w-28" />
+                        <col className="w-20" />
+                        <col className="w-16" />
+                        <col />
+                      </colgroup>
                       <thead>
                         <tr className="bg-slate-50 border-b border-slate-100">
-                          <th className="px-6 py-4 text-xs font-black text-slate-400 uppercase tracking-wider">날짜</th>
-                          <th className="px-6 py-4 text-xs font-black text-slate-400 uppercase tracking-wider">채널</th>
-                          <th className="px-6 py-4 text-xs font-black text-slate-400 uppercase tracking-wider">점수</th>
-                          <th className="px-6 py-4 text-xs font-black text-slate-400 uppercase tracking-wider">키워드 및 내용</th>
+                          <th className="px-5 py-4 text-xs font-black text-slate-400 uppercase tracking-wider whitespace-nowrap">날짜</th>
+                          <th className="px-5 py-4 text-xs font-black text-slate-400 uppercase tracking-wider whitespace-nowrap">채널</th>
+                          <th className="px-5 py-4 text-xs font-black text-slate-400 uppercase tracking-wider whitespace-nowrap">점수</th>
+                          <th className="px-5 py-4 text-xs font-black text-slate-400 uppercase tracking-wider whitespace-nowrap">키워드 및 내용</th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-slate-50">
                         {history.map((item, i) => (
                           <tr key={i} className="hover:bg-slate-50/50 transition-colors">
-                            <td className="px-6 py-4 text-sm font-bold text-slate-700">{new Date(item.date).toLocaleDateString()}</td>
-                            <td className="px-6 py-4">
+                            <td className="px-5 py-4 text-sm font-bold text-slate-700 whitespace-nowrap">{formatHistoryDate(item.date)}</td>
+                            <td className="px-5 py-4">
                               <span className="text-xs font-bold text-brand-600 bg-brand-50 px-2 py-0.5 rounded uppercase">{item.type}</span>
                             </td>
-                            <td className="px-6 py-4">
+                            <td className="px-5 py-4">
                               <span className={cn(
                                 "text-sm font-black",
                                 sentimentTextClass(item.sentimentScore)
@@ -218,13 +274,13 @@ export default function SentimentAnalysis({ history, customer, guidance }: Senti
                                 {item.sentimentScore}
                               </span>
                             </td>
-                            <td className="px-6 py-4">
+                            <td className="px-5 py-4 min-w-0">
                               <div className="flex flex-wrap gap-1 mb-1.5">
                                 {['경제적 어려움', '납부 의지'].map((kw, idx) => (
                                   <span key={idx} className="text-[10px] bg-slate-100 text-slate-500 px-1.5 py-0.5 rounded font-bold">#{kw}</span>
                                 ))}
                               </div>
-                              <p className="text-sm text-slate-600 line-clamp-1 font-medium">{item.content}</p>
+                              <p className="text-sm text-slate-600 font-medium leading-relaxed whitespace-normal break-keep">{item.content}</p>
                             </td>
                           </tr>
                         ))}
@@ -325,4 +381,15 @@ function sentimentBgClass(score: number) {
   if (score >= 61) return 'bg-emerald-500';
   if (score >= 31) return 'bg-amber-500';
   return 'bg-red-500';
+}
+
+function formatHistoryDate(date: string) {
+  return new Intl.DateTimeFormat('ko-KR', {
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  })
+    .format(new Date(date))
+    .replace(/\.\s*/g, '.')
+    .replace(/\.$/, '');
 }

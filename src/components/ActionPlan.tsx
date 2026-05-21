@@ -23,7 +23,7 @@ export default function ActionPlanPanel({ plans, currentStep, customer, contactH
       <div className="flex items-center justify-between mb-3">
         <h3 className="font-bold text-slate-800 flex items-center gap-2">
           <Clock className="w-5 h-5 text-brand-500" />
-          타임 라인
+          타임라인
         </h3>
         <div className="flex items-center gap-2">
           <span className="text-[10px] font-bold text-brand-600 bg-brand-50 px-2 py-0.5 rounded uppercase tracking-wider">
@@ -105,7 +105,7 @@ export default function ActionPlanPanel({ plans, currentStep, customer, contactH
         onClick={() => setIsModalOpen(true)}
         className="mt-3 w-full h-9 bg-white hover:bg-slate-50 text-slate-700 text-sm font-black rounded-xl flex items-center justify-center gap-1 transition-all border border-slate-200 whitespace-nowrap shadow-sm shrink-0"
       >
-        타임 라인 상세보기 <ChevronRight className="w-4 h-4" />
+        타임라인 상세보기 <ChevronRight className="w-4 h-4" />
       </button>
     </div>
 
@@ -120,58 +120,78 @@ export default function ActionPlanPanel({ plans, currentStep, customer, contactH
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.96, y: 12 }}
             onClick={(event) => event.stopPropagation()}
-            className="bg-white rounded-2xl w-full max-w-3xl h-[620px] overflow-hidden shadow-2xl border border-slate-200 flex flex-col"
+            className="bg-white rounded-2xl w-full max-w-3xl max-h-[90vh] overflow-hidden shadow-2xl border border-slate-200 flex flex-col"
           >
             <div className="p-5 border-b border-slate-100 bg-slate-50 flex items-center justify-between">
               <div>
-                <h2 className="text-lg font-black text-slate-900">타임 라인 상세보기</h2>
+                <h2 className="text-lg font-black text-slate-900">타임라인 상세보기</h2>
                 <p className="text-sm font-bold text-slate-500">현재 Step {currentStep} · {currentPlan?.title}</p>
               </div>
               <button onClick={() => setIsModalOpen(false)} className="p-2 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-200">
                 <X className="w-5 h-5" />
               </button>
             </div>
-            <div className="p-5 space-y-4 flex-1 overflow-hidden">
-              <div className="grid grid-cols-4 gap-3">
-                {[
-                  { label: '회수등급', value: customer.recoveryGrade, tone: customer.recoveryGrade >= 'D' ? 'text-red-600' : 'text-brand-600' },
-                  { label: '건전성', value: customer.soundnessClass, tone: 'text-slate-900' },
-                  { label: '상품', value: customer.product, tone: 'text-slate-900' },
-                  { label: '현재 단계', value: `Step ${currentStep}`, tone: 'text-brand-600' },
-                ].map((item) => (
-                  <div key={item.label} className="rounded-xl border border-slate-200 bg-slate-50 p-3">
-                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{item.label}</p>
-                    <p className={cn("mt-1 text-base font-black truncate", item.tone)}>{item.value}</p>
-                  </div>
-                ))}
-              </div>
-
-              <div className="rounded-2xl border border-brand-100 bg-brand-50 p-4">
-                <p className="text-xs font-black text-brand-700 uppercase tracking-widest">현재 실행 라인</p>
-                <p className="mt-1 text-lg font-black text-slate-900">{currentPlan?.action}</p>
-                <p className="mt-1 text-sm font-bold text-slate-600">{currentPlan?.title} · {currentPlan?.period}</p>
-                <div className="mt-3 grid grid-cols-3 gap-2">
-                  {actionDates(customer).map((item) => (
-                    <div
-                      key={item.label}
-                      className={cn(
-                        "rounded-lg border px-3 py-2",
-                        item.danger ? "border-red-100 bg-red-50" : "border-brand-100 bg-white"
-                      )}
-                    >
-                      <p className={cn("text-[10px] font-black uppercase tracking-widest", item.danger ? "text-red-500" : "text-slate-400")}>{item.label}</p>
-                      <p className={cn("mt-0.5 text-sm font-black tabular-nums", item.danger ? "text-red-700" : "text-slate-900")}>{item.value}</p>
+            <div className="p-5 space-y-5 flex-1 min-h-0 overflow-y-auto overscroll-contain scrollbar-thin">
+              <section className="space-y-3">
+                <h3 className="text-sm font-black text-slate-900">요약</h3>
+                <div className="grid grid-cols-4 gap-3">
+                  {[
+                    { label: '회수등급', value: customer.recoveryGrade, tone: customer.recoveryGrade >= 'D' ? 'text-red-600' : 'text-brand-600' },
+                    { label: '건전성', value: customer.soundnessClass, tone: 'text-slate-900' },
+                    { label: '상품', value: customer.product, tone: 'text-slate-900' },
+                    { label: '현재 단계', value: `Step ${currentStep}`, tone: 'text-brand-600' },
+                  ].map((item) => (
+                    <div key={item.label} className="rounded-xl border border-slate-200 bg-slate-50 p-3">
+                      <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{item.label}</p>
+                      <p className={cn("mt-1 text-base font-black truncate", item.tone)}>{item.value}</p>
                     </div>
                   ))}
                 </div>
-              </div>
 
-              <details className="rounded-xl border border-slate-200 bg-white p-4">
-                <summary className="cursor-pointer text-sm font-black text-slate-900">단계별 처리 이력 펼쳐보기</summary>
-                <div className="mt-3 grid grid-cols-1 gap-2">
+                <div className="rounded-2xl border border-brand-100 bg-brand-50 p-4">
+                  <p className="text-xs font-black text-brand-700 uppercase tracking-widest">현재 실행 라인</p>
+                  <p className="mt-1 text-lg font-black text-slate-900">{currentPlan?.action}</p>
+                  <p className="mt-1 text-sm font-bold text-slate-600">{currentPlan?.title} · {currentPlan?.period}</p>
+                  <div className="mt-3 grid grid-cols-3 gap-2">
+                    {actionDates(customer).map((item) => (
+                      <div
+                        key={item.label}
+                        className={cn(
+                          "rounded-lg border px-3 py-2",
+                          item.danger ? "border-red-100 bg-red-50" : "border-brand-100 bg-white"
+                        )}
+                      >
+                        <p className={cn("text-[10px] font-black uppercase tracking-widest", item.danger ? "text-red-500" : "text-slate-400")}>{item.label}</p>
+                        <p className={cn("mt-0.5 text-sm font-black tabular-nums", item.danger ? "text-red-700" : "text-slate-900")}>{item.value}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  {actionChecks.slice(0, 2).map((check, index) => (
+                    <div key={check.title} className="rounded-xl border border-slate-200 bg-white p-4 flex gap-3">
+                      <div className={cn(
+                        'w-8 h-8 rounded-lg flex items-center justify-center text-sm font-black shrink-0',
+                        index === 0 ? 'bg-brand-600 text-white' : 'bg-slate-100 text-slate-500'
+                      )}>
+                        {index + 1}
+                      </div>
+                      <div className="min-w-0">
+                        <p className="text-sm font-black text-slate-900">{check.title}</p>
+                        <p className="mt-1 text-xs font-bold leading-relaxed text-slate-600">{check.detail}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </section>
+
+              <section className="space-y-3">
+                <h3 className="text-sm font-black text-slate-900">상세 처리 이력</h3>
+                <div className="grid grid-cols-1 gap-2">
                   {stageDetails.map((stage) => (
                     <div key={stage.step} className={cn(
-                      "rounded-lg border px-3 py-2",
+                      "rounded-xl border px-4 py-3",
                       stage.isCurrent ? "border-brand-200 bg-brand-50" : "border-slate-200 bg-slate-50"
                     )}>
                       <div className="flex items-center gap-2 min-w-0">
@@ -184,29 +204,13 @@ export default function ActionPlanPanel({ plans, currentStep, customer, contactH
                         <p className="text-sm font-black text-slate-900 truncate">{stage.title}</p>
                         <span className="text-[10px] font-black text-slate-500 bg-white border border-slate-200 px-2 py-0.5 rounded shrink-0">{stage.period}</span>
                       </div>
-                      <p className="mt-1 text-xs font-bold text-slate-600 line-clamp-1">{stage.action}</p>
-                      <p className="mt-1 text-xs font-bold text-slate-500 line-clamp-1">이력: {stage.history}</p>
+                      <p className="mt-2 text-xs font-bold leading-relaxed text-slate-600">{stage.action}</p>
+                      <p className="mt-1 text-xs font-bold leading-relaxed text-slate-500">이력: {stage.history}</p>
+                      <p className="mt-1 text-xs font-bold leading-relaxed text-slate-500">확인: {stage.check}</p>
                     </div>
                   ))}
                 </div>
-              </details>
-
-              <div className="grid grid-cols-2 gap-3">
-                {actionChecks.slice(0, 2).map((check, index) => (
-                  <div key={check.title} className="rounded-xl border border-slate-200 bg-white p-4 flex gap-3">
-                    <div className={cn(
-                      'w-8 h-8 rounded-lg flex items-center justify-center text-sm font-black shrink-0',
-                      index === 0 ? 'bg-brand-600 text-white' : 'bg-slate-100 text-slate-500'
-                    )}>
-                      {index + 1}
-                    </div>
-                    <div className="min-w-0">
-                      <p className="text-sm font-black text-slate-900">{check.title}</p>
-                      <p className="mt-1 text-xs font-bold leading-relaxed text-slate-600">{check.detail}</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
+              </section>
 
               <div className="flex flex-wrap gap-2">
                 {['개인채무자보호법', '자산건전성 기준', '내부 회수정책'].map((basis) => (

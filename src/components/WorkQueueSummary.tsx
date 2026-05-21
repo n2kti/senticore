@@ -30,23 +30,23 @@ export default function WorkQueueSummary({ summary }: WorkQueueSummaryProps) {
 
   const rows = [
     {
-      label: '회수 전략',
+      label: '회수전략',
       result: summary.productDecision,
-      hint: '계좌 판단 결과',
+      hint: '타임라인 기반',
       color: 'bg-slate-900 text-white',
       details: summary.accountActions,
     },
     {
-      label: '행동 전략',
+      label: '행동전략',
       result: summary.behaviorDecision,
-      hint: '납부 흐름 결과',
+      hint: '행동 분석 기반',
       color: 'bg-brand-600 text-white',
       details: [summary.nextActionTitle, summary.contactCadence],
     },
     {
-      label: '응대 전략',
+      label: '응대전략',
       result: summary.sentimentDecision,
-      hint: '상담원 주의',
+      hint: '감성 분석 기반',
       color: 'bg-red-600 text-white',
       details: [summary.toneTitle, summary.toneInstruction, summary.toneGuardrail],
       basis: ['개인채무자보호법', '채권추심 준법', '내부 회수정책'],
@@ -109,7 +109,7 @@ export default function WorkQueueSummary({ summary }: WorkQueueSummaryProps) {
             <div className="flex items-center gap-2">
               <span className={cn(
                 'min-w-0 max-w-full rounded-lg px-3 py-1.5 text-sm font-black',
-                row.label === '응대 전략' ? 'leading-snug line-clamp-2' : 'truncate',
+                row.label === '응대전략' ? 'leading-snug line-clamp-2' : 'truncate',
                 row.color
               )}>
                 {row.result}
@@ -121,7 +121,7 @@ export default function WorkQueueSummary({ summary }: WorkQueueSummaryProps) {
                   key={detail}
                   className={cn(
                     "rounded-lg bg-slate-50 border border-slate-100 px-2.5 py-1.5 text-xs font-bold text-slate-600 leading-snug",
-                    row.label === '응대 전략' ? 'line-clamp-2' : 'line-clamp-1'
+                    row.label === '응대전략' ? 'line-clamp-2' : 'line-clamp-1'
                   )}
                 >
                   {compactDashboardText(detail)}
